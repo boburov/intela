@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "YouTube Music Player",
-  description: "Play your favorites, ad-free!",
+  description: "Play your favorites!",
 };
 
 export default function RootLayout({

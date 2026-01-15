@@ -14,12 +14,12 @@ const initialPlaylist = [
     title: "Faber Drive - Tongue Tied",
   },
   {
-    url: "https://youtu.be/6Ux6SlOE9Qk?list=RDMMmgIszdutx3k",
-    title: "The Red Jumpsuit Apparatus - Face Down",
+    url: "https://youtu.be/l9WKZpC9UbU?list=RDmgIszdutx3k",
+    title: "Story Of The Year - Until The Day I Die",
   },
   {
-    url: "https://youtu.be/ntSBKPkk4m4?list=RDMMmgIszdutx3k",
-    title: "Simple Plan - Jet Lag ft. Natasha Bedingfield",
+    url: "https://youtu.be/iAP9AF6DCu4?list=RDmgIszdutx3k",
+    title: "The Calling - Wherever You Will Go",
   },
 ];
 
@@ -66,7 +66,7 @@ export default function YouTubeMusicPlayer() {
             YouTube Music Player
           </h1>
           <p className="font-semibold text-yellow-500 text-xl">
-            Play your favorites, ad-free!
+            Play your favorites!
           </p>
         </div>
 
