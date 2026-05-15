@@ -8,9 +8,13 @@ import { AddSongFormComponent } from "@/components/AddSongFormComponent";
 import { PlaylistComponent } from "@/components/PlaylistComponent";
 import { useState, useEffect } from "react";
 import { Music2 } from "lucide-react";
+import { title } from "process";
 
 const initialPlaylist = [
-
+  {
+    title: "Rick Astley - Never Gonna Give You Up (Video)",
+    url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+  }
 ];
 
 export default function YouTubeMusicPlayer() {
@@ -100,7 +104,6 @@ export default function YouTubeMusicPlayer() {
             isPlaying={isPlaying}
             onPlaySong={playSong}
             onDeleteSong={deleteSong}
-            onMoveSong={moveSong}
           />
         </section>
       </div>
@@ -164,22 +167,20 @@ export default function YouTubeMusicPlayer() {
                 <button
                   key={count}
                   onClick={() => setSpecificRepeat(count)}
-                  className={`px-2 py-1 text-[10px] rounded-md border transition-all ${
-                    repeatMode === "one" && repeatCount === count
-                      ? "bg-primary text-primary-foreground border-primary"
-                      : "bg-secondary/50 text-muted-foreground border-border hover:border-primary/50"
-                  }`}
+                  className={`px-2 py-1 text-[10px] rounded-md border transition-all ${repeatMode === "one" && repeatCount === count
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "bg-secondary/50 text-muted-foreground border-border hover:border-primary/50"
+                    }`}
                 >
                   {count}x
                 </button>
               ))}
               <button
                 onClick={() => setSpecificRepeat(-1)}
-                className={`px-2 py-1 text-[10px] rounded-md border transition-all ${
-                  repeatMode === "one" && repeatCount === -1
-                    ? "bg-primary text-primary-foreground border-primary"
-                    : "bg-secondary/50 text-muted-foreground border-border hover:border-primary/50"
-                }`}
+                className={`px-2 py-1 text-[10px] rounded-md border transition-all ${repeatMode === "one" && repeatCount === -1
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-secondary/50 text-muted-foreground border-border hover:border-primary/50"
+                  }`}
               >
                 ∞
               </button>
