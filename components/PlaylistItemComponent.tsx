@@ -1,76 +1,77 @@
 "use client";
 
 import React from "react";
-import { Music, Trash2 } from "lucide-react";
-import Image from "next/image";
+import { GripVertical, Trash2, ChevronUp, ChevronDown } from "lucide-react";
 import { Song } from "@/types/music";
-import { extractYouTubeId, getThumbnailUrl } from "@/utils/youtube";
 
 interface PlaylistItemProps {
-  item: Song;
-  index: number;
+  song: Song;
   isActive: boolean;
-  onPlay: (index: number) => void;
-  onDelete: (index: number) => void;
+  isPlaying: boolean;
+  onPlay: () => void;
+  onDelete: () => void;
+  onMoveUp?: () => void;
+  onMoveDown?: () => void;
+  isFirst?: boolean;
+  isLast?: boolean;
 }
 
 export const PlaylistItemComponent: React.FC<PlaylistItemProps> = ({
-  item,
-  index,
+  song,
   isActive,
   onPlay,
   onDelete,
+  onMoveUp,
+  onMoveDown,
+  isFirst,
+  isLast,
 }) => {
-  const videoId = extractYouTubeId(item.url);
-  const thumbnailUrl = videoId ? getThumbnailUrl(videoId) : null;
-
   return (
     <div
-      className={`flex items-center gap-4 p-4 rounded-lg border-2 transition-all cursor-pointer group
-        ${
-          isActive
-            ? "bg-linear-to-r from-red-900/50 to-red-800/50 border-red-500"
-            : "bg-black/30 border-gray-700 hover:border-red-700 hover:bg-black/50"
-        }`}
-      onClick={() => onPlay(index)}
+      className={`group flex items-center gap-4 p-4 rounded-xl border transition-all ${
+        isActive
+          ? "bg-primary/10 border-primary shadow-sm"
+          : "bg-card border-border hover:border-primary/50"
+      }`}
     >
-      <div
-        className={`shrink-0 w-12 h-12 rounded flex items-center justify-center text-gray-400 font-bold ${
-          isActive ? "bg-black" : "bg-gray-800 "
-        }`}
-      >
-        {isActive ? (
-          <Music className="w-6 h-6 text-white animate-pulse" />
-        ) : (
-          <span>{index + 1}</span>
-        )}
+      <div className="flex flex-col gap-1 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onMoveUp?.();
+          }}
+          disabled={isFirst}
+          className="p-1 hover:text-primary disabled:opacity-30"
+        >
+          <ChevronUp className="h-4 w-4" />
+        </button>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onMoveDown?.();
+          }}
+          disabled={isLast}
+          className="p-1 hover:text-primary disabled:opacity-30"
+        >
+          <ChevronDown className="h-4 w-4" />
+        </button>
       </div>
 
-      {thumbnailUrl && (
-        <Image
-          src={thumbnailUrl}
-          alt="Thumbnail"
-          className="w-20 h-14 object-cover rounded"
-          width={80}
-          height={56}
-        />
-      )}
-
-      <div className="flex-1 min-w-0">
-        <p className="text-white font-medium truncate">
-          {item.title || "Untitled"}
-        </p>
-        {/* <p className="text-gray-400 text-sm truncate">{item.url}</p> */}
+      <div className="flex-1 min-w-0 cursor-pointer" onClick={onPlay}>
+        <h3 className={`font-medium truncate ${isActive ? "text-primary" : "text-foreground"}`}>
+          {song.title}
+        </h3>
+        <p className="text-xs text-muted-foreground truncate">{song.url}</p>
       </div>
 
       <button
         onClick={(e) => {
           e.stopPropagation();
-          onDelete(index);
+          onDelete();
         }}
-        className="opacity-0 group-hover:opacity-100 p-2 hover:bg-red-600 rounded-full transition-all cursor-pointer"
+        className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-md transition-all opacity-0 group-hover:opacity-100"
       >
-        <Trash2 className="w-5 h-5 text-white" />
+        <Trash2 className="h-4 w-4" />
       </button>
     </div>
   );

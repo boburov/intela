@@ -8,8 +8,12 @@ export const usePlaylist = (initialPlaylist: Song[]) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isShuffle, setIsShuffle] = useState(false);
   const [repeatMode, setRepeatMode] = useState<RepeatMode>("none");
+  const [repeatCount, setRepeatCount] = useState(0); // 0: none, -1: infinite, >0: count
   const [shuffledOrder, setShuffledOrder] = useState<number[]>([]);
   const [shouldRestart, setShouldRestart] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [seekToTime, setSeekToTime] = useState<number | null>(null);
 
   const playOrder = useMemo(() => {
     if (isShuffle && shuffledOrder.length === playlist.length) {
@@ -52,6 +56,27 @@ export const usePlaylist = (initialPlaylist: Song[]) => {
     const currentModeIndex = modes.indexOf(repeatMode);
     const nextMode = modes[(currentModeIndex + 1) % modes.length];
     setRepeatMode(nextMode);
+    setRepeatCount(nextMode === "one" ? -1 : 0);
+  };
+
+  const setSpecificRepeat = (count: number) => {
+    setRepeatMode("one");
+    setRepeatCount(count);
+  };
+
+  const moveSong = (fromIndex: number, toIndex: number) => {
+    const newPlaylist = [...playlist];
+    const [removed] = newPlaylist.splice(fromIndex, 1);
+    newPlaylist.splice(toIndex, 0, removed);
+    setPlaylist(newPlaylist);
+
+    if (currentIndex === fromIndex) {
+      setCurrentIndex(toIndex);
+    } else if (currentIndex > fromIndex && currentIndex <= toIndex) {
+      setCurrentIndex(currentIndex - 1);
+    } else if (currentIndex < fromIndex && currentIndex >= toIndex) {
+      setCurrentIndex(currentIndex + 1);
+    }
   };
 
   const addSong = (title: string, url: string) => {
@@ -88,14 +113,22 @@ export const usePlaylist = (initialPlaylist: Song[]) => {
 
   // This is called when video ends
   const handleVideoEnd = useCallback(() => {
-    console.log("Video ended. Repeat mode:", repeatMode);
+    console.log("Video ended. Repeat mode:", repeatMode, "Count:", repeatCount);
 
     if (repeatMode === "one") {
-      // Restart the current video
-      setShouldRestart(true);
-      // Reset the flag after a short delay
-      setTimeout(() => setShouldRestart(false), 100);
-      return;
+      if (repeatCount === -1) {
+        // Infinite repeat
+        setShouldRestart(true);
+        setTimeout(() => setShouldRestart(false), 100);
+        return;
+      } else if (repeatCount > 0) {
+        // Repeat N times
+        setRepeatCount((prev) => prev - 1);
+        setShouldRestart(true);
+        setTimeout(() => setShouldRestart(false), 100);
+        return;
+      }
+      // If repeatCount is 0, continue to next song
     }
 
     const nextIndex = currentIndex + 1;
@@ -148,6 +181,19 @@ export const usePlaylist = (initialPlaylist: Song[]) => {
     }
   };
 
+  const handleProgress = (current: number, dur: number) => {
+    setCurrentTime(current);
+    setDuration(dur);
+  };
+
+  const seekTo = (time: number) => {
+    setSeekToTime(time);
+  };
+
+  const handleSeekComplete = () => {
+    setSeekToTime(null);
+  };
+
   const getCurrentVideoId = (): string | null => {
     if (playlist.length === 0 || currentIndex === -1) return null;
     const actualIndex = isShuffle ? playOrder[currentIndex] : currentIndex;
@@ -169,18 +215,27 @@ export const usePlaylist = (initialPlaylist: Song[]) => {
     isPlaying,
     isShuffle,
     repeatMode,
+    repeatCount,
     actualCurrentIndex,
     canGoPrevious,
     getCurrentVideoId,
     addSong,
+    moveSong,
     deleteSong,
     playSong,
     nextSong,
     previousSong,
     toggleShuffle,
     toggleRepeat,
+    setSpecificRepeat,
     setIsPlaying,
     handleVideoEnd,
+    handleProgress,
+    seekTo,
+    handleSeekComplete,
     shouldRestart,
+    currentTime,
+    duration,
+    seekToTime,
   };
 };

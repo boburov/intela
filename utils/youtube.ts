@@ -15,3 +15,21 @@ export const getEmbedUrl = (videoId: string, autoplay: boolean): string => {
     typeof window !== "undefined" ? window.location.origin : ""
   }`;
 };
+
+export const fetchYouTubeTitle = async (url: string): Promise<string> => {
+  try {
+    const videoId = extractYouTubeId(url);
+    if (!videoId) return "Unknown Title";
+
+    const response = await fetch(
+      `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`
+    );
+    if (response.ok) {
+      const data = await response.json();
+      return data.title || "Unknown Title";
+    }
+  } catch (error) {
+    console.error("Error fetching YouTube title:", error);
+  }
+  return "Unknown Title";
+};

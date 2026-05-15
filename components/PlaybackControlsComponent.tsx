@@ -11,6 +11,7 @@ import {
   Repeat1,
 } from "lucide-react";
 import { RepeatMode } from "@/types/music";
+import { ProgressBarComponent } from "./ProgressBarComponent";
 
 interface PlaybackControlsProps {
   isPlaying: boolean;
@@ -20,111 +21,94 @@ interface PlaybackControlsProps {
   playlistLength: number;
   canGoPrevious: boolean;
   isPlayerReady: boolean;
+  currentTime: number;
+  duration: number;
   onTogglePlay: () => void;
   onToggleShuffle: () => void;
   onToggleRepeat: () => void;
   onPrevious: () => void;
   onNext: () => void;
+  onSeek: (time: number) => void;
 }
 
 export const PlaybackControlsComponent: React.FC<PlaybackControlsProps> = ({
   isPlaying,
   isShuffle,
   repeatMode,
-  currentIndex,
   playlistLength,
   canGoPrevious,
   isPlayerReady,
+  currentTime,
+  duration,
   onTogglePlay,
   onToggleShuffle,
   onToggleRepeat,
   onPrevious,
   onNext,
+  onSeek,
 }) => {
   return (
-    <div className="bg-black/50 border-2 border-red-900 rounded-lg p-6">
-      <div className="flex items-center justify-center gap-4 mb-6">
+    <div className="flex flex-col items-center gap-2 flex-1 max-w-xl">
+      <div className="flex items-center gap-6">
         <button
           onClick={onToggleShuffle}
           disabled={!isPlayerReady || playlistLength === 0}
-          className={`p-3 rounded-full transition-all cursor-pointer ${
-            isShuffle
-              ? "bg-red-600 text-white"
-              : "bg-gray-800 text-gray-400 hover:bg-gray-700"
-          } disabled:opacity-30 disabled:cursor-not-allowed`}
+          className={`p-2 rounded-md transition-all ${
+            isShuffle ? "text-primary" : "text-muted-foreground hover:text-foreground"
+          } disabled:opacity-30`}
         >
-          <Shuffle className="w-5 h-5" />
+          <Shuffle className="w-4 h-4" />
         </button>
 
         <button
           onClick={onPrevious}
           disabled={!canGoPrevious || !isPlayerReady || playlistLength === 0}
-          className="p-3 bg-gray-800 hover:bg-gray-700 rounded-full transition-all cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+          className="text-muted-foreground hover:text-foreground disabled:opacity-50 transition-colors"
         >
-          <SkipBack className="w-6 h-6" />
+          <SkipBack className="h-5 w-5 fill-current" />
         </button>
 
         <button
           onClick={onTogglePlay}
           disabled={!isPlayerReady || playlistLength === 0}
-          className="p-6 bg-linear-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 rounded-full transition-all transform hover:scale-110 shadow-lg shadow-red-900/50 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed disabled:transform-none"
+          className="bg-primary text-primary-foreground p-3 rounded-full hover:scale-105 active:scale-95 disabled:opacity-50 transition-all shadow-lg"
         >
           {isPlaying ? (
-            <Pause className="w-8 h-8" />
+            <Pause className="h-6 w-6 fill-current" />
           ) : (
-            <Play className="w-8 h-8 ml-1" />
+            <Play className="h-6 w-6 fill-current ml-0.5" />
           )}
         </button>
 
         <button
           onClick={onNext}
           disabled={!isPlayerReady || playlistLength === 0}
-          className="p-3 bg-gray-800 hover:bg-gray-700 rounded-full transition-all cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+          className="text-muted-foreground hover:text-foreground disabled:opacity-50 transition-colors"
         >
-          <SkipForward className="w-6 h-6" />
+          <SkipForward className="h-5 w-5 fill-current" />
         </button>
 
         <button
           onClick={onToggleRepeat}
           disabled={!isPlayerReady || playlistLength === 0}
-          className={`p-3 rounded-full transition-all cursor-pointer ${
-            repeatMode !== "none"
-              ? "bg-red-600 text-white"
-              : "bg-gray-800 text-gray-400 hover:bg-gray-700"
-          } disabled:opacity-30 disabled:cursor-not-allowed`}
+          className={`p-2 rounded-md transition-all ${
+            repeatMode !== "none" ? "text-primary" : "text-muted-foreground hover:text-foreground"
+          } disabled:opacity-30`}
         >
           {repeatMode === "one" ? (
-            <Repeat1 className="w-5 h-5" />
+            <Repeat1 className="w-4 h-4" />
           ) : (
-            <Repeat className="w-5 h-5" />
+            <Repeat className="w-4 h-4" />
           )}
         </button>
       </div>
 
-      <div className="flex items-center justify-center gap-6 text-sm">
-        <span className="text-gray-400">
-          Shuffle:{" "}
-          <span className={isShuffle ? "text-red-500 font-bold" : "text-white"}>
-            {isShuffle ? "ON" : "OFF"}
-          </span>
-        </span>
-        <span className="text-gray-400">
-          Repeat:{" "}
-          <span className="text-white font-bold">
-            {repeatMode === "none"
-              ? "OFF"
-              : repeatMode === "one"
-              ? "ONE"
-              : "ALL"}
-          </span>
-        </span>
-        <span className="text-gray-400">
-          Track:{" "}
-          <span className="text-white font-bold">
-            {currentIndex + 1} / {playlistLength}
-          </span>
-        </span>
-      </div>
+      <ProgressBarComponent
+        currentTime={currentTime}
+        duration={duration}
+        onSeek={onSeek}
+        disabled={!isPlayerReady || playlistLength === 0}
+      />
     </div>
   );
 };

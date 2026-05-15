@@ -14,6 +14,9 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "YouTube Music Player",
+  icons:{
+    icon: "/logo.png",
+  },
   description: "Play your favorites!",
 };
 

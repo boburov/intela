@@ -6,21 +6,11 @@ import { NowPlayingComponent } from "@/components/NowPlayingComponent";
 import { PlaybackControlsComponent } from "@/components/PlaybackControlsComponent";
 import { AddSongFormComponent } from "@/components/AddSongFormComponent";
 import { PlaylistComponent } from "@/components/PlaylistComponent";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { Music2 } from "lucide-react";
 
 const initialPlaylist = [
-  {
-    url: "https://youtu.be/mgIszdutx3k?list=RDMMmgIszdutx3k",
-    title: "Faber Drive - Tongue Tied",
-  },
-  {
-    url: "https://youtu.be/l9WKZpC9UbU?list=RDmgIszdutx3k",
-    title: "Story Of The Year - Until The Day I Die",
-  },
-  {
-    url: "https://youtu.be/iAP9AF6DCu4?list=RDmgIszdutx3k",
-    title: "The Calling - Wherever You Will Go",
-  },
+
 ];
 
 export default function YouTubeMusicPlayer() {
@@ -30,22 +20,36 @@ export default function YouTubeMusicPlayer() {
     isPlaying,
     isShuffle,
     repeatMode,
+    repeatCount,
     actualCurrentIndex,
     canGoPrevious,
     getCurrentVideoId,
     addSong,
+    moveSong,
     deleteSong,
     playSong,
     nextSong,
     previousSong,
     toggleShuffle,
     toggleRepeat,
+    setSpecificRepeat,
     setIsPlaying,
     handleVideoEnd,
+    handleProgress,
+    seekTo,
+    handleSeekComplete,
     shouldRestart,
+    currentTime,
+    duration,
+    seekToTime,
   } = usePlaylist(initialPlaylist);
 
+  const [mounted, setMounted] = useState(false);
   const [isPlayerReady, setIsPlayerReady] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleAddSong = (title: string, url: string) => {
     const success = addSong(title, url);
@@ -57,79 +61,132 @@ export default function YouTubeMusicPlayer() {
   const currentVideoId = getCurrentVideoId();
   const currentSong = playlist[actualCurrentIndex] || null;
 
+  if (!mounted) return null;
+
   return (
-    <div className="min-h-screen bg-linear-to-br from-black via-red-950 to-black text-white p-4 md:p-8">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-5xl font-bold mb-2 text-white">
-            YouTube Music Player
-          </h1>
-          <p className="font-semibold text-yellow-500 text-xl">
-            Play your favorites!
-          </p>
+    <main className="flex min-h-screen flex-col items-center p-4 md:p-8 pb-32">
+      {/* Header */}
+      <header className="w-full max-w-6xl flex justify-between items-center mb-12">
+        <div className="flex items-center gap-2">
+          <div className="bg-primary text-primary-foreground p-2 rounded-xl">
+            <Music2 className="h-6 w-6" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">
+              YouTube Music Player
+            </h1>
+            <p className="text-xs text-muted-foreground font-medium">
+              Play your favorites!
+            </p>
+          </div>
         </div>
+      </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Video Player & Controls */}
-          <div className="lg:col-span-2 space-y-6">
-            <VideoPlayerComponent
-              videoId={currentVideoId}
-              isPlaying={isPlaying}
-              onVideoEnd={handleVideoEnd}
-              onPlayerReady={setIsPlayerReady}
-              shouldRestart={shouldRestart}
-            />
+      {/* Content */}
+      <div className="w-full max-w-3xl space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+        <section>
+          <AddSongFormComponent onAddSong={handleAddSong} />
+        </section>
 
-            <NowPlayingComponent song={currentSong} />
-
-            <PlaybackControlsComponent
-              isPlaying={isPlaying}
-              isShuffle={isShuffle}
-              repeatMode={repeatMode}
-              currentIndex={currentIndex}
-              playlistLength={playlist.length}
-              canGoPrevious={canGoPrevious}
-              isPlayerReady={isPlayerReady}
-              onTogglePlay={() => setIsPlaying(!isPlaying)}
-              onToggleShuffle={toggleShuffle}
-              onToggleRepeat={toggleRepeat}
-              onPrevious={previousSong}
-              onNext={nextSong}
-            />
+        <section className="space-y-4">
+          <div className="flex items-center justify-between px-2">
+            <h2 className="text-lg font-semibold flex items-center gap-2 text-foreground">
+              Playlist
+            </h2>
           </div>
+          <PlaylistComponent
+            songs={playlist}
+            currentIndex={actualCurrentIndex}
+            isPlaying={isPlaying}
+            onPlaySong={playSong}
+            onDeleteSong={deleteSong}
+            onMoveSong={moveSong}
+          />
+        </section>
+      </div>
 
-          {/* Playlist */}
-          <div className="space-y-6">
-            <AddSongFormComponent onAddSong={handleAddSong} />
-
-            <PlaylistComponent
-              songs={playlist}
-              currentIndex={actualCurrentIndex}
-              isPlaying={isPlaying}
-              onPlaySong={playSong}
-              onDeleteSong={deleteSong}
-            />
-          </div>
+      {/* Player Section (Hidden as in original Intela) */}
+      <div
+        style={{
+          position: "fixed",
+          bottom: 80,
+          right: 0,
+          width: 1,
+          height: 1,
+          overflow: "hidden",
+          zIndex: 40,
+          pointerEvents: "none",
+        }}
+      >
+        <div style={{ width: 320, height: 180, marginLeft: -319, marginTop: -179 }}>
+          <VideoPlayerComponent
+            videoId={currentVideoId}
+            isPlaying={isPlaying}
+            onVideoEnd={handleVideoEnd}
+            onPlayerReady={setIsPlayerReady}
+            onProgress={handleProgress}
+            seekToTime={seekToTime}
+            onSeekComplete={handleSeekComplete}
+            shouldRestart={shouldRestart}
+          />
         </div>
       </div>
 
-      <style jsx>{`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 8px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: rgba(0, 0, 0, 0.3);
-          border-radius: 4px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: rgba(220, 38, 38, 0.6);
-          border-radius: 4px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: rgba(220, 38, 38, 0.8);
-        }
-      `}</style>
-    </div>
+      {/* Player Bar */}
+      <div className="fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-lg border-t border-border p-4 z-50">
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex-1 w-full md:w-auto">
+            <NowPlayingComponent song={currentSong} />
+          </div>
+
+          <PlaybackControlsComponent
+            isPlaying={isPlaying}
+            isShuffle={isShuffle}
+            repeatMode={repeatMode}
+            currentIndex={currentIndex}
+            playlistLength={playlist.length}
+            canGoPrevious={canGoPrevious}
+            isPlayerReady={isPlayerReady}
+            currentTime={currentTime}
+            duration={duration}
+            onTogglePlay={() => setIsPlaying(!isPlaying)}
+            onToggleShuffle={toggleShuffle}
+            onToggleRepeat={toggleRepeat}
+            onPrevious={previousSong}
+            onNext={nextSong}
+            onSeek={seekTo}
+          />
+
+          <div className="flex-1 hidden md:flex justify-end items-center gap-2">
+            <span className="text-xs text-muted-foreground font-medium">Repeat:</span>
+            <div className="flex gap-1">
+              {[1, 2, 3].map((count) => (
+                <button
+                  key={count}
+                  onClick={() => setSpecificRepeat(count)}
+                  className={`px-2 py-1 text-[10px] rounded-md border transition-all ${
+                    repeatMode === "one" && repeatCount === count
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-secondary/50 text-muted-foreground border-border hover:border-primary/50"
+                  }`}
+                >
+                  {count}x
+                </button>
+              ))}
+              <button
+                onClick={() => setSpecificRepeat(-1)}
+                className={`px-2 py-1 text-[10px] rounded-md border transition-all ${
+                  repeatMode === "one" && repeatCount === -1
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "bg-secondary/50 text-muted-foreground border-border hover:border-primary/50"
+                }`}
+              >
+                ∞
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
   );
 }

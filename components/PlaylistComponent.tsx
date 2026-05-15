@@ -1,8 +1,8 @@
 "use client";
 
 import React from "react";
-import { Song } from "@/types/music";
 import { PlaylistItemComponent } from "./PlaylistItemComponent";
+import { Song } from "@/types/music";
 
 interface PlaylistProps {
   songs: Song[];
@@ -19,27 +19,26 @@ export const PlaylistComponent: React.FC<PlaylistProps> = ({
   onPlaySong,
   onDeleteSong,
 }) => {
-  return (
-    <div className="bg-black/50 border-2 border-red-900 rounded-lg p-6">
-      <h3 className="text-xl font-bold mb-4">
-        My Playlist ({songs.length} songs)
-      </h3>
-      <div className="space-y-3 max-h-150 overflow-y-auto pr-2 custom-scrollbar">
-        {songs.length === 0 ? (
-          <p className="text-gray-500 text-center py-8">No songs available</p>
-        ) : (
-          songs.map((item, index) => (
-            <PlaylistItemComponent
-              key={index}
-              item={item}
-              index={index}
-              isActive={index === currentIndex && isPlaying}
-              onPlay={onPlaySong}
-              onDelete={onDeleteSong}
-            />
-          ))
-        )}
+  if (songs.length === 0) {
+    return (
+      <div className="text-center py-20 bg-secondary/20 rounded-3xl border border-dashed border-border">
+        <p className="text-muted-foreground">Your playlist is empty. Add some music!</p>
       </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {songs.map((song, index) => (
+        <PlaylistItemComponent
+          key={index}
+          song={song}
+          isActive={index === currentIndex}
+          isPlaying={isPlaying && index === currentIndex}
+          onPlay={() => onPlaySong(index)}
+          onDelete={() => onDeleteSong(index)}
+        />
+      ))}
     </div>
   );
 };

@@ -8,6 +8,9 @@ interface VideoPlayerProps {
   isPlaying: boolean;
   onVideoEnd: () => void;
   onPlayerReady: (ready: boolean) => void;
+  onProgress?: (currentTime: number, duration: number) => void;
+  seekToTime?: number | null;
+  onSeekComplete?: () => void;
   shouldRestart?: boolean;
 }
 
@@ -24,20 +27,42 @@ export const VideoPlayerComponent: React.FC<VideoPlayerProps> = ({
   isPlaying,
   onVideoEnd,
   onPlayerReady,
+  onProgress,
+  seekToTime,
+  onSeekComplete,
   shouldRestart = false,
 }) => {
   const playerRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isPlayerReady, setIsPlayerReady] = useState(false);
+  const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  const startProgressTimer = () => {
+    stopProgressTimer();
+    progressIntervalRef.current = setInterval(() => {
+      if (playerRef.current && isPlayerReady && onProgress) {
+        const currentTime = playerRef.current.getCurrentTime();
+        const duration = playerRef.current.getDuration();
+        if (duration > 0) {
+          onProgress(currentTime, duration);
+        }
+      }
+    }, 1000);
+  };
+
+  const stopProgressTimer = () => {
+    if (progressIntervalRef.current) {
+      clearInterval(progressIntervalRef.current);
+      progressIntervalRef.current = null;
+    }
+  };
 
   // Load YouTube IFrame API
   useEffect(() => {
-    // Check if API is already loaded
     if (window.YT && window.YT.Player) {
       return;
     }
 
-    // Load the IFrame Player API code asynchronously
     const tag = document.createElement("script");
     tag.src = "https://www.youtube.com/iframe_api";
     const firstScriptTag = document.getElementsByTagName("script")[0];
@@ -50,38 +75,43 @@ export const VideoPlayerComponent: React.FC<VideoPlayerProps> = ({
 
     setIsPlayerReady(false);
     onPlayerReady(false);
+    stopProgressTimer();
 
-    // Destroy previous player
     if (playerRef.current) {
       playerRef.current.destroy();
     }
 
-    // Create new player
     playerRef.current = new window.YT.Player(containerRef.current, {
       height: "400",
       width: "100%",
       videoId: videoId,
       playerVars: {
         autoplay: 0,
-        controls: 1,
+        controls: 0, // Disable native controls for custom ones
         modestbranding: 1,
         rel: 0,
+        showinfo: 0,
+        iv_load_policy: 3,
       },
       events: {
         onReady: (event: any) => {
-          console.log("Player ready");
           setIsPlayerReady(true);
           onPlayerReady(true);
-          // If should be playing when ready, start playback
           if (isPlaying) {
             event.target.playVideo();
+            startProgressTimer();
           }
         },
         onStateChange: (event: any) => {
-          console.log("Player state changed:", event.data);
-          // -1: unstarted, 0: ended, 1: playing, 2: paused, 3: buffering, 5: cued
+          // 1: playing
+          if (event.data === 1) {
+            startProgressTimer();
+          } else {
+            stopProgressTimer();
+          }
+
+          // 0: ended
           if (event.data === 0) {
-            console.log("Video ended - calling onVideoEnd");
             onVideoEnd();
           }
         },
@@ -89,23 +119,20 @@ export const VideoPlayerComponent: React.FC<VideoPlayerProps> = ({
     });
 
     return () => {
+      stopProgressTimer();
       if (playerRef.current) {
         playerRef.current.destroy();
       }
     };
   }, [videoId]);
 
-  // Handle restart
+  // Handle seekToTime
   useEffect(() => {
-    if (shouldRestart && playerRef.current && isPlayerReady) {
-      try {
-        playerRef.current.seekTo(0);
-        playerRef.current.playVideo();
-      } catch (error) {
-        console.error("Error restarting video:", error);
-      }
+    if (seekToTime !== undefined && seekToTime !== null && playerRef.current && isPlayerReady) {
+      playerRef.current.seekTo(seekToTime, true);
+      if (onSeekComplete) onSeekComplete();
     }
-  }, [shouldRestart, isPlayerReady]);
+  }, [seekToTime, isPlayerReady]);
 
   // Handle play/pause changes
   useEffect(() => {
@@ -123,24 +150,24 @@ export const VideoPlayerComponent: React.FC<VideoPlayerProps> = ({
   }, [isPlaying, isPlayerReady]);
 
   return (
-    <div className="bg-black rounded-lg overflow-hidden border-4 border-red-900 shadow-2xl relative">
+    <div className="bg-black rounded-xl overflow-hidden relative">
       {videoId ? (
         <>
           <div ref={containerRef} className="w-full aspect-video" />
           {!isPlayerReady && (
-            <div className="absolute inset-0 bg-black/80 flex items-center justify-center">
+            <div className="absolute inset-0 bg-black flex items-center justify-center">
               <div className="text-center">
-                <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-red-500 mx-auto mb-4"></div>
-                <p className="text-white text-xl font-semibold">
-                  Loading YouTube Player...
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mx-auto mb-4"></div>
+                <p className="text-white text-sm font-medium">
+                  Loading Player...
                 </p>
               </div>
             </div>
           )}
         </>
       ) : (
-        <div className="w-full aspect-video bg-gray-900 flex items-center justify-center">
-          <Music className="w-24 h-24 text-gray-700" />
+        <div className="w-full aspect-video bg-secondary flex items-center justify-center">
+          <Music className="w-16 h-16 text-muted-foreground opacity-20" />
         </div>
       )}
     </div>
